@@ -1,6 +1,6 @@
 const cors = require("cors");
 const express = require("express");
-const mySqlProxy = require("./mySqlProxy2");
+const  promisePool = require("./PromisePool.js").promisePool;
 const { body, check, param, validationResult } = require("express-validator");
 
 const PORT = 80;
@@ -20,11 +20,34 @@ app.get("/message", cors(corsOptions), async (req, res) => {
   res.send({ message: "Hello World!!!" });
 });
 
+//get car by id
 app.get("/cars/:id", cors(corsOptions), async (req, res) => {
-  const carId = req.params.id;
-  const car = await mySqlProxy.selectCarById(carId);
+  try {
+    const carId = req.params.id;
+
+    const [car] = await promisePool.query(
+      "select * from car where car_id = ?",
+      [carId]
+    );
+    res.send(car[0]);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+//get car by make
+app.get("/cars", cors(corsOptions), async (req, res) => {
+  const make = req.query.make;
+  const [car] = await promisePool.query("select * from car where make = ?", 
+    make,
+  );
   res.send(car);
 });
+
+//post car
+app.post("/cars", cors(corsOptions), async (req, res) => {
+  
+})
 
 app.listen(PORT, () => {
   console.log(`Express web API running on port: ${PORT}.`);
