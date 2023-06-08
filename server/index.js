@@ -96,48 +96,60 @@ app.post("/cars/", cors(corsOptions), async (req, res) => {
 });
 
 //put car
-app.put("/cars/:id", cors(corsOptions), async (req, res) => {
-  try {
-    //validate
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ erros: errors.array() });
+app.put(
+  "/cars/:id",
+  cors(corsOptions),
+  param("id").isNumeric(),
+  async (req, res) => {
+    try {
+      //validate
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ erros: errors.array() });
+      }
+
+      const carId = req.params.id;
+      const newCar = req.body;
+
+      const [result] = await promisePool.execute(
+        "update car set make = ?, model = ?, color = ?, price = ? where car_id = ?",
+        [newCar.make, newCar.model, newCar.color, newCar.price, carId]
+      );
+      result
+        ? res.send({ "message ": result.info })
+        : res.status(404).send({ message: "Not found." });
+    } catch (error) {
+      res.status(404);
     }
-
-    const carId = req.params.id;
-    const newCar = req.body;
-
-    const [result] = await promisePool.execute(
-      "update car set make = ?, model = ?, color = ?, price = ? where car_id = ?",
-      [newCar.make, newCar.model, newCar.color, newCar.price, carId]
-    );
-    result
-      ? res.send({ "message ": result.info })
-      : res.status(404).send({ message: "Not found." });
-  } catch (error) {
-    res.status(404);
   }
-});
+);
 
 //delete car
-app.delete("/cars/:id", cors(corsOptions), async (req, res) => {
-  try {
-    //validate
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ erros: errors.array() });
-    }
+app.delete(
+  "/cars/:id",
+  cors(corsOptions),
+  param("id").isNumeric(),
+  async (req, res) => {
+    try {
+      //validate
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ erros: errors.array() });
+      }
 
-    const carId = req.params.id;
-    const [result] = await promisePool.execute(
-      "delete from car where car_id = ?",
-      [carId]
-    );
-    result ? res.send(result) : res.status(404).send({ message: "Not found." });
-  } catch (error) {
-    res.status(404);
+      const carId = req.params.id;
+      const [result] = await promisePool.execute(
+        "delete from car where car_id = ?",
+        [carId]
+      );
+      result
+        ? res.send(result)
+        : res.status(404).send({ message: "Not found." });
+    } catch (error) {
+      res.status(404);
+    }
   }
-});
+);
 
 app.listen(PORT, () => {
   console.log(`Express web API running on port: ${PORT}.`);
