@@ -38,13 +38,13 @@ app.get("/cars/:id", cors(corsOptions), async (req, res) => {
 //get car by make
 app.get("/cars", cors(corsOptions), async (req, res) => {
   try {
-  const make = req.query.make;
-  const [car] = await promisePool.query(
-    "select * from car where make = ?",
-    make
-  );
-  res.send(car);
-  } catch(error){
+    const make = req.query.make;
+    const [car] = await promisePool.query(
+      "select * from car where make = ?",
+      make
+    );
+    res.send(car);
+  } catch (error) {
     res.status(404);
   }
 });
@@ -52,19 +52,22 @@ app.get("/cars", cors(corsOptions), async (req, res) => {
 //post car
 app.post("/cars/", cors(corsOptions), async (req, res) => {
   try {
-  const [result] = await promisePool.execute(
-    "insert into car (make, model, color, price) values (?, ?, ?, ?)",
-    ["Toyota", "Corolla", "Gray", 30000]
-  );
+    const car = req.body;
+    console.log(req.body);
+    const [result] = await promisePool.execute(
+      "insert into car (make, model, color, price) values (?, ?, ?, ?)",
+      [car.make, car.model, car.color, car.price]
+    );
+    console.log(result);
 
-  const newCarId = result.insertId;
-  const [newCar] = await promisePool.query(
-    "select * from car where car_id = ?",
-    newCarId
-  );
+    const newCarId = result.insertId;
+    const [newCar] = await promisePool.query(
+      "select * from car where car_id = ?",
+      newCarId
+    );
 
-  res.send(newCar[0]);
-  } catch(error){
+    res.send(newCar[0]);
+  } catch (error) {
     res.status(404);
   }
 });
@@ -72,13 +75,15 @@ app.post("/cars/", cors(corsOptions), async (req, res) => {
 //put car
 app.put("/cars/:id", cors(corsOptions), async (req, res) => {
   try {
-  const carId = req.params.id;
-  const [result] = await promisePool.execute(
-    "update car set make = ?, model = ?, color = ?, price = ? where car_id = ?",
-    ["Mazda", "Mazda6", "silver", 30000, carId]
-  );
-  res.send({ "message ": result.info });
-  } catch(error) {
+    const carId = req.params.id;
+    const newCar = req.body;
+
+    const [result] = await promisePool.execute(
+      "update car set make = ?, model = ?, color = ?, price = ? where car_id = ?",
+      [newCar.make, newCar.model, newCar.color, newCar.price, carId]
+    );
+    res.send({ "message ": result.info });
+  } catch (error) {
     res.status(404);
   }
 });
@@ -86,13 +91,13 @@ app.put("/cars/:id", cors(corsOptions), async (req, res) => {
 //delete car
 app.delete("/cars/:id", cors(corsOptions), async (req, res) => {
   try {
-  const carId = req.params.id;
-  const [result] = await promisePool.execute(
-    "delete from car where car_id = ?",
-    [carId]
-  );
-  res.send(result);
-  } catch(error){
+    const carId = req.params.id;
+    const [result] = await promisePool.execute(
+      "delete from car where car_id = ?",
+      [carId]
+    );
+    res.send(result);
+  } catch (error) {
     res.status(404);
   }
 });
